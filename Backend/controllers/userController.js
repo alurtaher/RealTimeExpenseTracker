@@ -1,4 +1,5 @@
 const User = require("../models/user");
+const bcrypt = require("bcrypt")
 
 // Add a new user
 exports.registerUser = async (req, res) => {
@@ -7,12 +8,19 @@ exports.registerUser = async (req, res) => {
 
     // Check if user already exists
     const isPresent = await User.findOne({ where: { email: email } });
-   
+
     if (isPresent === null) {
-      const newUser = await User.create({ username, email, password });
+      // Hash the password with salt rounds = 10
+      const saltRounds = 10;
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
+      const newUser = await User.create({
+        username,
+        email,
+        password: hashedPassword,
+      });
       return res.status(201).json(newUser);
     }
-    return res.status(400).json({message:"User already exists"});
+    return res.status(400).json({ message: "User already exists" });
   } catch (error) {
     res.status(500).json({ error: "Failed to create user" }, error);
   }
@@ -25,27 +33,32 @@ exports.loginUser = async (req, res) => {
 
     // Check for missing fields
     if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required." });
+      return res
+        .status(400)
+        .json({ message: "Email and password are required." });
     }
 
     // Check if user exists
     const user = await User.findOne({ where: { email } });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found. Please register." });
+      return res
+        .status(404)
+        .json({ message: "User not found. Please register." });
     }
 
     // Check password
-    if (user.password !== password) {
+    const match = await bcrypt.compare(password, user.password);
+    if (match) {
+      // If all good, respond success
+      const { id, username } = user;
+      return res.status(200).json({
+        message: "Login successful.",
+        user: { id, username, email },
+      });
+    }else{
       return res.status(401).json({ message: "User not authorized" });
     }
-
-    // If all good, respond success 
-    const { id, username } = user;
-    return res.status(200).json({
-      message: "Login successful.",
-      user: { id, username, email }
-    });
 
   } catch (error) {
     console.error("Login error:", error);
