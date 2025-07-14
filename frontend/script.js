@@ -1,47 +1,92 @@
-// Selecting the container and toggle buttons
+// Selecting register form and message display element
+const registerForm = document.querySelector('.form-box.register form');
+const registerMessage = document.querySelector('.register-message');
 const container = document.querySelector('.container');
 const registerBtn = document.querySelector('.register-btn');
 const loginBtn = document.querySelector('.login-btn');
-const api = 'https://crudcrud.com/api/4404b14863f246c7a55d812abc81aa11'
+const api = 'http://localhost:3000'
+registerMessage.style.color = "black"
 
 // Toggle animations
 registerBtn.addEventListener('click', () => {
-    container.classList.add('active');
+  container.classList.add('active');
 });
 
 loginBtn.addEventListener('click', () => {
-    container.classList.remove('active');
+  container.classList.remove('active');
 });
 
-// Handling Register Form Submission
-const registerForm = document.querySelector('.form-box.register form');
+// Register form submission handler
+registerForm.addEventListener('submit', function (event) {
+  event.preventDefault(); // prevent form reload
 
-registerForm.addEventListener('submit', function(event) {
-    event.preventDefault(); // prevent page reload
+  // Get values from input fields
+  const usernameInput = registerForm.querySelector('input[placeholder="Name"]');
+  const emailInput = registerForm.querySelector('input[placeholder="Email"]');
+  const passwordInput = registerForm.querySelector('input[placeholder="Password"]');
 
-    // Get values from the form
-    const username = registerForm.querySelector('input[placeholder="Username"]').value;
-    const email = registerForm.querySelector('input[placeholder="Email"]').value;
-    const password = registerForm.querySelector('input[placeholder="Password"]').value;
+  const username = usernameInput.value.trim();
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
 
-    // Create data object
-    const formData = {
-        username: username,
-        email: email,
-        password: password
-    };
+  // Validate basic input
+  if (!username || !email || !password) {
+    registerMessage.style.color = "red";
+    registerMessage.textContent = "All fields are required.";
+    return;
+  }
 
-    console.log("Register Form Data:", formData); // for debugging
+  // Create data object
+  const formData = { username, email, password };
 
-    // Send data to CrudCrud endpoint via Axios
-    axios.post(`${api}/register`, formData)
-        .then(response => {
-            alert("Registration Successful!");
-            registerForm.reset();
-            container.classList.remove('active'); // switch to login form
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert("Registration Failed. Please try again.");
-        });
+  // Clear previous message
+  registerMessage.textContent = "";
+
+  // Send data via Axios POST
+  axios.post(`${api}/user/register`, formData)
+    .then(response => {
+      registerMessage.style.color = "green";
+      registerMessage.textContent = "Registration Successful!";
+      registerForm.reset();
+
+      // Remove error borders if any
+      [usernameInput, emailInput, passwordInput].forEach(input => {
+        input.classList.remove('error');
+      });
+
+      // After short delay, switch to login and clear message
+      setTimeout(() => {
+        container.classList.remove('active');
+        registerMessage.textContent = "";
+      }, 1500);
+    })
+    .catch(error => {
+      if (error.response) {
+        if (error.response.status === 400) {
+          // Apply red border to all inputs
+          [usernameInput, emailInput, passwordInput].forEach(input => {
+            input.classList.add('error');
+          });
+
+          registerMessage.style.color = "red";
+          registerMessage.textContent = "User already exists. Please log in.";
+
+          // Remove error borders after 2 seconds
+          setTimeout(() => {
+            [usernameInput, emailInput, passwordInput].forEach(input => {
+              input.classList.remove('error');
+            });
+            registerMessage.textContent = "";
+          }, 2000);
+
+        } else {
+          registerMessage.style.color = "red";
+          registerMessage.textContent = "Registration failed. Please try again.";
+        }
+      } else {
+        // Network error (server offline or unreachable)
+        registerMessage.style.color = "red";
+        registerMessage.textContent = "Unable to connect to server. Check your connection.";
+      }
+    });
 });

@@ -237,3 +237,13 @@ form{ width: 100%; }
 
     .toggle-panel h1{font-size: 30px; }
 }
+
+.register-message {
+    margin-top: 10px;
+    font-size: 14px;
+    color: red;
+}
+
+.input-box input.error {
+  border: 2px solid red;
+}
