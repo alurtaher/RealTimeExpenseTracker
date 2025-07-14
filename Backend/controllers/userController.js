@@ -37,7 +37,7 @@ exports.loginUser = async (req, res) => {
 
     // Check password
     if (user.password !== password) {
-      return res.status(401).json({ message: "Incorrect password." });
+      return res.status(401).json({ message: "User not authorized" });
     }
 
     // If all good, respond success 
