@@ -18,30 +18,37 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-// Get all users
-/*exports.getAllUsers = async (req, res) => {
+// Login user by email and password
+exports.loginUser = async (req, res) => {
   try {
-    const users = await User.findAll();
-    res.json(users);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch users' });
-  }
-};
+    const { email, password } = req.body;
 
-// Delete a user by ID
-exports.deleteUser = async (req, res) => {
-  try {
-    const userId = req.params.id;
-    const deleted = await User.destroy({
-      where: { id: userId }
+    // Check for missing fields
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required." });
+    }
+
+    // Check if user exists
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found. Please register." });
+    }
+
+    // Check password
+    if (user.password !== password) {
+      return res.status(401).json({ message: "Incorrect password." });
+    }
+
+    // If all good, respond success 
+    const { id, username } = user;
+    return res.status(200).json({
+      message: "Login successful.",
+      user: { id, username, email }
     });
 
-    if (deleted) {
-      res.json({ message: `User with ID ${userId} deleted successfully.` });
-    } else {
-      res.status(404).json({ error: `User with ID ${userId} not found.` });
-    }
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete user' });
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Server error. Please try again later." });
   }
-};*/
+};
