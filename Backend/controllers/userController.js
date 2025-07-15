@@ -1,5 +1,5 @@
 const User = require("../models/user");
-const bcrypt = require("bcrypt")
+const bcrypt = require("bcrypt");
 
 // Add a new user
 exports.registerUser = async (req, res) => {
@@ -18,11 +18,19 @@ exports.registerUser = async (req, res) => {
         email,
         password: hashedPassword,
       });
-      return res.status(201).json(newUser);
+      // const { id, username, email } = newUser;
+      // return res.status(201).json({ id, username, email });
+      // avoid redeclaring username and email
+      return res.status(201).json({
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+      });
     }
     return res.status(400).json({ message: "User already exists" });
   } catch (error) {
-    res.status(500).json({ error: "Failed to create user" }, error);
+    console.error("Register error:", error);
+    res.status(500).json({ error: "Failed to create user" });
   }
 };
 
@@ -39,7 +47,7 @@ exports.loginUser = async (req, res) => {
     }
 
     // Check if user exists
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({ where: { email: email } });
 
     if (!user) {
       return res
@@ -54,12 +62,12 @@ exports.loginUser = async (req, res) => {
       const { id, username } = user;
       return res.status(200).json({
         message: "Login successful.",
-        user: { id, username, email },
+        username,
+        id
       });
-    }else{
+    } else {
       return res.status(401).json({ message: "User not authorized" });
     }
-
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ message: "Server error. Please try again later." });
