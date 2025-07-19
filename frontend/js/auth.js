@@ -50,7 +50,7 @@ registerForm.addEventListener("submit", function (event) {
     .post(`${api}/user/register`, formData)
     .then((response) => {
       registerMessage.style.color = "green";
-      localStorage.setItem("userId", response.data.id);
+      // localStorage.setItem("userId", response.data.id);
       registerMessage.textContent = "Registration Successful!";
       registerForm.reset();
 
@@ -132,7 +132,8 @@ loginForm.addEventListener("submit", function (event) {
     .post(`${api}/user/login`, loginData)
     .then((response) => {
       loginMessage.style.color = "green";
-      localStorage.setItem("userId", response.data.id);
+      //save the token into the local Storage
+      localStorage.setItem("token",response.data.token)
       window.location.href = 'expense.html'
       loginMessage.textContent = "Login successful!";
     })

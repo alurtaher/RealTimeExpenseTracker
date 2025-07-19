@@ -1,5 +1,6 @@
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
+const jwt = require('jsonwebtoken')
 
 // Add a new user
 exports.registerUser = async (req, res) => {
@@ -62,8 +63,8 @@ exports.loginUser = async (req, res) => {
       const { id, username } = user;
       return res.status(200).json({
         message: "Login successful.",
-        username,
-        id
+        username:username,
+        token:generateAccessToken(id)
       });
     } else {
       return res.status(401).json({ message: "User not authorized" });
@@ -73,3 +74,7 @@ exports.loginUser = async (req, res) => {
     res.status(500).json({ message: "Server error. Please try again later." });
   }
 };
+
+function generateAccessToken(id){
+  return jwt.sign({userId:id},"secretKey");
+}

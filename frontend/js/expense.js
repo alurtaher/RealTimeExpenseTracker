@@ -3,19 +3,22 @@ const amountInput = document.getElementById("amount");
 const descriptionInput = document.getElementById("description");
 const categorySelect = document.getElementById("category");
 const expenseList = document.getElementById("expense-list");
-const userId = localStorage.getItem("userId")
+const token = localStorage.getItem("token");
 
 const API_URL = "http://localhost:3000/expense";
 
-let editExpenseId = null; //  track if we're editing
+let editExpenseId = null; // Track if we're editing
 
 // Load existing expenses from API
 function loadExpenses() {
-  axios.get(`${API_URL}/get/${userId}`)
-    .then(res => {
+  axios
+    .get(`${API_URL}/get`, {
+      headers: { Authorization: token },
+    })
+    .then((res) => {
       res.data.forEach(addExpenseToScreen);
     })
-    .catch(err => console.error("Error fetching expenses:", err));
+    .catch((err) => console.error("Error fetching expenses:", err));
 }
 
 function addExpenseToScreen(expense) {
@@ -23,7 +26,8 @@ function addExpenseToScreen(expense) {
   card.className = "card mb-3 expense-card shadow-sm";
 
   const cardBody = document.createElement("div");
-  cardBody.className = "card-body d-flex justify-content-between align-items-center";
+  cardBody.className =
+    "card-body d-flex justify-content-between align-items-center";
 
   const details = document.createElement("div");
   details.innerHTML = `
@@ -42,15 +46,13 @@ function addExpenseToScreen(expense) {
     amountInput.value = expense.amount;
     descriptionInput.value = expense.description;
     categorySelect.value = expense.category;
-
-    editExpenseId = expense.id; //  set the id for edit mode
+    editExpenseId = expense.id; // Set the ID for edit mode
   };
 
   const deleteBtn = document.createElement("button");
   deleteBtn.textContent = "Delete";
   deleteBtn.className = "btn btn-danger btn-sm";
   deleteBtn.onclick = () => {
-    card.remove();
     deleteExpense(expense.id);
   };
 
@@ -60,46 +62,60 @@ function addExpenseToScreen(expense) {
   expenseList.append(card);
 }
 
-function deleteExpense(id) {
-  axios.delete(`${API_URL}/delete/${id}`)
-    .then(() => console.log("Deleted expense", id))
-    .catch(err => console.error("Delete failed:", err));
+//Delete Expense
+function deleteExpense(expenseId) {
+  axios
+    .delete(`${API_URL}/delete/${expenseId}`, {
+      headers: { Authorization: token },
+    })
+    .then(() => {
+      console.log("Deleted expense", expenseId);
+      refreshExpenses();
+    })
+    .catch((err) => console.error("Delete failed:", err));
 }
 
-form.addEventListener("submit", e => {
+form.addEventListener("submit", (e) => {
   e.preventDefault();
 
   const amount = amountInput.value;
   const description = descriptionInput.value;
   const category = categorySelect.value;
 
-  if (!amount || !description) {
+  if (!amount || !description || !category) {
     alert("Please fill in all fields.");
     return;
   }
 
-  const expense = { amount, description, category, userId };
+  const expense = { amount, description, category };
 
   if (editExpenseId) {
-    axios.put(`${API_URL}/update-expense/${editExpenseId}`, expense)
+    // Update existing expense
+    axios
+      .put(`${API_URL}/update-expense/${editExpenseId}`, expense, {
+        headers: { Authorization: token },
+      })
       .then(() => {
         refreshExpenses();
         form.reset();
         editExpenseId = null;
       })
-      .catch(err => console.error("Failed to update expense:", err));
+      .catch((err) => console.error("Failed to update expense:", err));
   } else {
-    axios.post(`${API_URL}/add/${userId}`, expense)
-      .then(res => {
+    // Add new expense
+    axios
+      .post(`${API_URL}/add`, expense, {
+        headers: { Authorization: token },
+      })
+      .then((res) => {
         addExpenseToScreen(res.data);
         form.reset();
       })
-      .catch(err => console.error("Failed to add expense:", err));
+      .catch((err) => console.error("Failed to add expense:", err));
   }
 });
 
-
-// Refresh all expenses (used after update)
+// Refresh all expenses (used after update/delete)
 function refreshExpenses() {
   expenseList.innerHTML = "";
   loadExpenses();
@@ -117,5 +133,8 @@ window.addEventListener("DOMContentLoaded", () => {
 // Dark mode toggle
 document.getElementById("toggle-dark-mode").addEventListener("click", () => {
   document.body.classList.toggle("dark-mode");
-  localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
+  localStorage.setItem(
+    "theme",
+    document.body.classList.contains("dark-mode") ? "dark" : "light"
+  );
 });

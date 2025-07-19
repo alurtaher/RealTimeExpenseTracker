@@ -14,7 +14,7 @@ app.use('/user',userRoutes);
 app.use('/expense',expenseRoutes);
 
 // Sync DB and start server
-sequelize.sync({ alter: true}).then(() => {
+sequelize.sync({ force: false}).then(() => {
   console.log('Database synced');
   app.listen(3000, () => console.log('Server running on port 3000'));
 });
