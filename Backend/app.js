@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const sequelize = require('./config/database');
 const userRoutes = require('./routes/userRoutes');
 const expenseRoutes = require('./routes/expenseRoutes')
+const paymentRoutes = require('./routes/paymentRoutes')
 var cors = require('cors')
 
 const app = express();
@@ -12,6 +13,7 @@ app.use(cors())
 // Routes
 app.use('/user',userRoutes);
 app.use('/expense',expenseRoutes);
+app.use('/payment',paymentRoutes);
 
 // Sync DB and start server
 sequelize.sync({ force: false}).then(() => {

@@ -2,50 +2,138 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Expense Tracker - Bootstrap</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Modern Expense Tracker</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
   <link rel="stylesheet" href="css/expense.css">
 </head>
 
-<body class="bg-light" >
+<body>
+  <div class="app-container">
+    <div class="header">
+      <div>
+        <h1 class="app-title">Modern Expense Tracker</h1>
+        <p class="text-muted">Track and manage your expenses effortlessly</p>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <div class="theme-toggle" id="toggle-dark-mode">
+          <i class="fas fa-moon"></i>
+        </div>
+        <div class="d-flex gap-2">
+          <div class="d-flex flex-column">
+            <span class="text-muted">Total Expenses</span>
+            <span class="fw-bold" id="total-expenses">₹0</span>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  <button id="toggle-dark-mode" class="btn btn-primary position-fixed top-0 end-0 m-3">🌙</button>
-
-  <div class="container my-5">
-    <h1 class="text-center mb-4">Expense Tracker</h1>
-
-    <form id="expense-form" class="card p-4 shadow-sm">
-      <div class="mb-3">
-        <label for="amount" class="form-label">Enter the Expense Amount:</label>
-        <input type="number" id="amount" class="form-control" placeholder="Enter the amount">
+    <div class="row">
+      <!-- Stats Section -->
+      <div class="col-md-3 mb-4">
+        <div class="card">
+          <div class="stats-card">
+            <i class="fas fa-wallet fa-2x text-primary"></i>
+            <div class="stats-value" id="expenses-count">0</div>
+            <div class="stats-label">Expenses Recorded</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="stats-card">
+            <i class="fas fa-chart-pie fa-2x text-warning"></i>
+            <div class="stats-value" id="avg-expense">₹0</div>
+            <div class="stats-label">Average Expense</div>
+          </div>
+        </div>
       </div>
 
-      <div class="mb-3">
-        <label for="description" class="form-label">Choose Description:</label>
-        <input type="text" id="description" class="form-control " placeholder="How you spent the amount">
+      <!-- Form and List Section -->
+      <div class="col-md-9">
+        <div class="row">
+          <div class="col-lg-7">
+            <div class="card mb-4">
+              <div class="card-header">
+                <i class="fas fa-plus-circle me-2"></i>Add New Expense
+              </div>
+              <div class="card-body">
+                <form id="expense-form">
+                  <div class="mb-3">
+                    <label for="amount" class="form-label">Amount (₹)</label>
+                    <input type="number" class="form-control" id="amount" placeholder="Enter amount" required>
+                  </div>
+                  <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <input type="text" class="form-control" id="description" placeholder="What was this for?" required>
+                  </div>
+                  <div class="mb-4">
+                    <label for="category" class="form-label">Category</label>
+                    <select id="category" class="form-select">
+                      <option value="food">Food</option>
+                      <option value="travel">Travel</option>
+                      <option value="party">Party</option>
+                      <option value="bills">Bills</option>
+                    </select>
+                  </div>
+                  <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-save me-2"></i>
+                    <span id="submit-btn-text">Save Expense</span>
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <!-- Expense Distribution Chart -->
+            <div class="card mb-4">
+              <div class="card-header">
+                <i class="fas fa-chart-bar me-2"></i>Expense Distribution
+              </div>
+              <div class="card-body">
+                <div class="chart-container">
+                  <canvas id="expense-chart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-5">
+            <div class="card">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                  <i class="fas fa-list me-2"></i>Recent Expenses
+                </div>
+                <div class="text-muted" id="expenses-count-header">0 items</div>
+              </div>
+              <div class="card-body">
+                <div id="expense-list" class="d-flex flex-column gap-3">
+                  <div class="loading">
+                    <div class="loading-spinner"></div>
+                  </div>
+                </div>
+
+                <div id="empty-state" class="empty-state d-none">
+                  <i class="fas fa-receipt"></i>
+                  <h5>No Expenses Yet</h5>
+                  <p>Add your first expense to get started</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+    </div>
+  </div>
 
-      <div class="mb-3">
-        <label for="category" class="form-label">Choose a Category:</label>
-        <select id="category" class="form-select">
-          <option value="entertainment">Entertainment</option>
-          <option value="food" selected>Food</option>
-          <option value="pop">Pop</option>
-          <option value="party">Party</option>
-        </select>
-      </div>
-
-      <button type="submit" class="btn btn-primary w-100">Add Expense</button>
-    </form>
-
-    <div id="expense-list" class="mt-5"></div>
+  <div class="row">
+    <button id="renderBtn">Pay Now</button>
   </div>
 
   <script src="js/expense.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
