@@ -1,15 +1,26 @@
 const cashfreeService = require("../services/cashfreeService");
 const Order = require("../models/order");
+const user = require("../models/user");
 
 // Create Order
 exports.processPayment = async (req, res) => {
   try {
+    const userId = req.user.id;
+
+    // ✅ Check if user is already premium
+    const existingUser = await user.findByPk(userId);
+    if (existingUser && existingUser.isPremium) {
+      return res.status(200).json({
+        message: "You are already premium User.",
+        isPremium: true,
+      });
+    }
+
+    // Proceed with new order creation
     const orderId =
       "order_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
     const orderAmount = 2000.0;
-    const customerId = "cust_001";
     const customerPhone = "8499089094";
-    const userId = req.user.id;
 
     // ✅ Create DB Order and store result
     const order = await Order.create({
@@ -33,7 +44,7 @@ exports.processPayment = async (req, res) => {
       dbOrderId: order.id.toString(), // optional if you want to track DB order ID
     });
 
-    res.status(201).json({ paymentSessionId });
+    res.status(201).json({ paymentSessionId,orderId});
   } catch (error) {
     console.error("Error creating order:", error);
     res.status(500).json({ message: "Failed to create payment session" });
@@ -57,13 +68,13 @@ exports.getPaymentStatus = async (req, res) => {
         await user.save();
       }
     }
-
-    // ✅ Redirect to frontend with status
-    return res.redirect(`http://127.0.0.1:5500/frontend/expense.html?status=${status}`);
-
+    return res.json({status})
   } catch (error) {
     console.error("Error fetching payment status:", error);
-    res.status(500).json({ message: "Error fetching payment status","status":"Failed"});
+    await Order.update({ status: "FAILED" });
+    res
+      .status(500)
+      .json({ message: "Error fetching payment status", status: "Failed" });
   }
 };
 

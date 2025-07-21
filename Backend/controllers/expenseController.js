@@ -1,9 +1,21 @@
 const Expense = require("../models/expense");
+const User = require('../models/user')
 
 exports.addExpense = async (req, res) => {
+  
   try {
     const { amount, description, category } = req.body;
     const UserId = req.user.id;
+    // const t = await sequelize.transaction();
+
+    await User.update(
+      {
+        totalExpenses: req.user.totalExpenses + Number(amount),
+      },
+      { where: { id: UserId } },
+      // { transaction: t }
+    );
+
     const expense = await Expense.create({
       amount,
       description,

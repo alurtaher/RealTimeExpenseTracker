@@ -295,3 +295,17 @@ body {
     margin-bottom: 1rem;
   }
 }
+
+#renderBtn {
+  border-radius: 12px;
+  padding: 0.6rem 1rem;
+  font-weight: 600;
+  background-color: var(--success);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+#renderBtn:hover {
+  background-color: var(--primary-light);
+  transform: translateY(-2px);
+}

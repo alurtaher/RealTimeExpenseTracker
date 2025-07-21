@@ -320,7 +320,6 @@ document.getElementById("toggle-dark-mode").addEventListener("click", () => {
 // Initialize app
 document.addEventListener("DOMContentLoaded", initApp);
 
-
 //cashfree
 const cashfree = Cashfree({
   mode: "sandbox",
@@ -330,21 +329,69 @@ document.getElementById("renderBtn").addEventListener("click", async () => {
   try {
     const token = localStorage.getItem("token"); // Get token from storage
 
-    const response = await axios.post("http://localhost:3000/payment/pay", null, {
-      headers: {
-        Authorization: token,
-      },
-    });
+    const response = await axios.post(
+      "http://localhost:3000/payment/pay",
+      null,
+      {
+        headers: {
+          Authorization: token,
+        },
+      }
+    );
 
     const data = response.data;
+    // ✅ Check if user is already premium
+    if (data.isPremium) {
+      alert(data.message);
+      return;
+    }
     const paymentSessionId = data.paymentSessionId;
+    const orderId = data.orderId;
 
     let checkoutOptions = {
       paymentSessionId: paymentSessionId,
-      redirectTarget: "_self",
+      redirectTarget: "_modal",
     };
-    await cashfree.checkout(checkoutOptions);
+    // Start the checkout process
+    const result = await cashfree.checkout(checkoutOptions);
+
+    if (result.error) {
+      // This will be true whenever user clicks on close icon inside the modal or any error happens during the payment
+      console.log(
+        "User has closed the popup or there is some payment error, Check for Payment Status"
+      );
+      console.log(result.error);
+    }
+    if (result.redirect) {
+      // This will be true when the payment redirection page couldn't be opened in the same window
+      // This is an exceptional case only when the page is opened inside an inAppBrowser
+      // In this case the customer will be redirected to return url once payment is completed
+      console.log("Payment will be redirected");
+    }
+    if (result.paymentDetails) {
+      // This will be called whenever the payment is completed irrespective of transaction status
+      console.log("Payment has been completed, Check for Payment Status");
+      console.log(result.paymentDetails.paymentMessage);
+
+      const response = await fetch(
+        `http://localhost:3000/payment/payment-status/${orderId}`,
+        {
+          method: "GET",
+        }
+      );
+      const data = await response.json();
+      alert("Your payment is " + data.status);
+    }
   } catch (error) {
     console.log("Error is: ", error);
   }
 });
+
+// document.addEventListener("DOMContentLoaded", isPremiumUser);
+document.getElementById("leaderBoardBtn").addEventListener("click", async () =>{
+    try {
+      window.location.href = 'leaderboard.html'
+    } catch (error) {
+        console.log(error)
+    }
+})

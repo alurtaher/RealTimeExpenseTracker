@@ -1,6 +1,7 @@
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
-const jwt = require('jsonwebtoken')
+const jwt = require("jsonwebtoken");
+const sequelize = require("../config/database");
 
 // Add a new user
 exports.registerUser = async (req, res) => {
@@ -63,8 +64,8 @@ exports.loginUser = async (req, res) => {
       const { id, username } = user;
       return res.status(200).json({
         message: "Login successful.",
-        username:username,
-        token:generateAccessToken(id)
+        username: username,
+        token: generateAccessToken(id),
       });
     } else {
       return res.status(401).json({ message: "User not authorized" });
@@ -75,6 +76,17 @@ exports.loginUser = async (req, res) => {
   }
 };
 
-function generateAccessToken(id){
-  return jwt.sign({userId:id},"secretKey");
+exports.isPremiumUser = async (req, res, next) => {
+  try {
+    if (req.user.isPremium) {
+      return res.json({ isPremium: true });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+
+function generateAccessToken(id) {
+  return jwt.sign({ userId: id }, "secretKey");
 }

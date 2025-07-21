@@ -134,7 +134,7 @@ loginForm.addEventListener("submit", function (event) {
       loginMessage.style.color = "green";
       //save the token into the local Storage
       localStorage.setItem("token",response.data.token)
-      window.location.href = 'expense.html'
+      window.location.href = 'home.html'
       loginMessage.textContent = "Login successful!";
     })
     .catch((error) => {

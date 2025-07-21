@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const expenseController = require('../controllers/expenseController');
-const authentication = require('../middleware/auth');
+const authenticate = require('../middleware/auth'); // ✅ directly import the function
 
-router.get('/get', authentication.authenticate, expenseController.getExpenses);
-router.post('/add', authentication.authenticate, expenseController.addExpense);
-router.put('/update-expense/:expenseId', authentication.authenticate, expenseController.updateExpense);
-router.delete('/delete/:expenseId', authentication.authenticate, expenseController.deleteExpense);
+router.get('/get', authenticate, expenseController.getExpenses); // ✅ use the function directly
+router.post('/add', authenticate, expenseController.addExpense);
+router.put('/update-expense/:expenseId', authenticate, expenseController.updateExpense);
+router.delete('/delete/:expenseId', authenticate, expenseController.deleteExpense);
 
 module.exports = router;
